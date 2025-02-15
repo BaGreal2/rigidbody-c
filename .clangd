@@ -1,0 +1,6 @@
+CompileFlags:
+  Add:
+      - "-I../raylib/include"
+      - "-I../include"
+Diagnostics:
+  UnusedIncludes: None
