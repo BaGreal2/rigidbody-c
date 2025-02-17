@@ -1,3 +1,6 @@
 obj
 rigidbody
+double_pendulum
+friction
+rigidbodylib.o
 .DS_Store

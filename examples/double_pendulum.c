@@ -1,0 +1,89 @@
+#include "raylib.h"
+#include "rigidbodylib.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 450
+#define SCREEN_FPS 60
+#define SCREEN_BACKGROUND (Color){22, 22, 22, 255}
+
+void draw_bone(RB_Bone *bone)
+{
+  Vector2 joint1_pos = {bone->joint1_pos.x, bone->joint1_pos.y};
+  Vector2 joint2_pos = {bone->joint2_pos.x, bone->joint2_pos.y};
+  DrawLineEx(joint1_pos, joint2_pos, 2, WHITE);
+
+  int circle_1_radius = 3 * bone->joint1_mass;
+  int circle_2_radius = 3 * bone->joint2_mass;
+  if (circle_1_radius) {
+    DrawCircleV(joint1_pos, circle_1_radius, RED);
+  } else {
+    DrawCircleV(joint1_pos, 3, BLUE);
+  }
+  if (circle_2_radius) {
+    DrawCircleV(joint2_pos, circle_2_radius, RED);
+  } else {
+    DrawCircleV(joint2_pos, 3, BLUE);
+  }
+}
+
+int main()
+{
+  InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Double Pendulum");
+  SetTargetFPS(SCREEN_FPS);
+
+  rb_init_config(0);
+
+  Vector2 fixed_anchor = {SCREEN_WIDTH / 2.0f, 100};
+  int pendulum_length = 90;
+
+  RB_Bone bone1 = {
+      .joint1 = 0,
+      .joint2 = 0,
+      .joint1_pos = {fixed_anchor.x, fixed_anchor.y},
+      .joint2_pos = {fixed_anchor.x, fixed_anchor.y + pendulum_length},
+      .joint1_mass = 0,
+      .joint2_mass = 1,
+      .joint1_velocity = {0, 0},
+      .joint2_velocity = {0, 0},
+      .length = rb_calculate_distance(&bone1.joint1_pos, &bone1.joint2_pos),
+  };
+
+  RB_Bone bone2 = {
+      .joint1 = 0,
+      .joint2 = 0,
+      .joint1_pos = bone1.joint2_pos,
+      .joint2_pos = {bone1.joint2_pos.x, bone1.joint2_pos.y + pendulum_length},
+      .joint1_mass = 1,
+      .joint2_mass = 1,
+      .joint1_velocity = {0, 0},
+      .joint2_velocity = {0, 0},
+      .length = rb_calculate_distance(&bone2.joint1_pos, &bone2.joint2_pos),
+  };
+
+  RB_Bone bones[] = {bone1, bone2};
+  size_t bones_count = sizeof(bones) / sizeof(bones[0]);
+
+  rb_connect_bone(&bones[0], &bones[1]);
+
+  bones[1].joint2_velocity.x = 300;
+
+  while (!WindowShouldClose()) {
+    float dt = GetFrameTime();
+
+    rb_update_bones(bones, bones_count, dt);
+
+    BeginDrawing();
+    ClearBackground(SCREEN_BACKGROUND);
+
+    for (size_t i = 0; i < bones_count; ++i) {
+      draw_bone(&bones[i]);
+    }
+    EndDrawing();
+  }
+
+  CloseWindow();
+  return 0;
+}
